@@ -1,18 +1,29 @@
 //return date string in YYYY-MM-DD format
-const getDateString = date => 
+const getDateString = date =>
     `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 
-const displayPicture = data => {
+const displayPicture = (data, div_index) => {
     let html = "";
-    if(data.error) {      // error - display message
+    if (data.error) {      // error - display message
         html += `<span class="error">${data.error.message}e/span>`;
-    }
-    else if (data.code) {  // problem - display message
+    } else if (data.code) {  // problem - display message
         html += `<span class="error">${data.msg}</span`;
-    }
-    else {                  // sucesss display image/video data
-        html += `<h3>${data.title}</h3>`;
+    } else {                  // sucesss display image/video data
+
+        if (data.url.includes('thecatapi.com')){
+            data.title = "LOOK CAT"
+        }
+
+        class_ = data.url.includes('thecatapi.com') ? "cat" : 'SPACEEEEEEEEE'
+
+        html += `<h3 class=${class_}>${data.title}</h3>`;
         const width = 700;
+
+        console.log(data.hasOwnProperty('media_type'))
+        if (!data.hasOwnProperty('media_type')){
+            data.media_type = "image"
+        }
+
         switch (data.media_type) {
             case "image":
                 html += `<img src="${data.url}" width=${width} alt="NASA photo.jpg">`;
@@ -22,22 +33,29 @@ const displayPicture = data => {
                 break;
             default:
                 html += `<img src="images/notavailable.png" width="$(width)" alt="NASA photo.jpg">`;
+        }
+
+        if (data.url.includes('thecatapi.com')){
+            html += `<div class="cat">CUTE CAT`;
+            html += "</div>";
+
+            // explanation
+            html += `<p class="cat">Look IT SO CUTE.</p>`;
+        }else {
+            // date and copyright
+            html += `<div class=${class_}>${data.date}`;
+            if (data.copyright) {
+                html += `<span class="right">&copy; ${data.copyright}</span>`;
+            }
+            html += "</div>";
+
+            // explanation
+            html += `<p>${data.explanation}</p>`;
+        }
     }
 
-    // date and copyright
-    html += `<div>${data.date}`;
-    if (data.copyright) {
-        html += `<span class="right">&copy; ${data.copyright}</span>`;
-    }
-    html += "</div>";
-
-    // explanation
-    html += `<p>${data.explanation}</p>`;
-
-  }
-
-  // display HTML
-  $("#display").html(html);
+    // display HTML
+    $(`#display${div_index}`).html(html);
 
 };
 
@@ -47,7 +65,7 @@ const displayError = error => {
 };
 
 
-$(document).ready( () => {
+$(document).ready(() => {
     const today = new Date();
     let dateStr = getDateString(today);
 
@@ -55,15 +73,14 @@ $(document).ready( () => {
     dateTextbox.val(dateStr);
     dateTextbox.focus();
 
-    $("#view_button").click( () => {
+    $("#view_button").click(() => {
         dateStr = $("#date").val();
         const dateObj = new Date(dateStr);
 
-        if(dateObj == "Invalid Date") {
+        if (dateObj == "Invalid Date") {
             const msg = "Please enter valid date in YYYY-MM-DD format."
             $("#display").html(`<span class="error">${msg}</span>`);
-        }
-        else {
+        } else {
             dateStr = getDateString(dateObj);
 
             // build URL for API request
@@ -73,9 +90,21 @@ $(document).ready( () => {
 
             fetch(url)
                 .then(response => response.json())
-                .then( json => displayPicture(json))
-                .catch( e => displayError(e) );
+                .then(json => displayPicture(json, ''))
+                .catch(e => displayError(e));
         }
         $("#date").focus();
+    });
+    $("#cat_button").click(() => {
+            // build URL for API request
+            const domain = `https://api.thecatapi.com/v1/images/search`;
+            const request = ``;
+            const url = domain + request;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(json => displayPicture(json[0], '1'))
+                .catch(e => displayError(e));
+
     });
 });
